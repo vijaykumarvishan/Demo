@@ -1,0 +1,55 @@
+//function for filter lookup
+function onChange(executionContext) {
+    // Get the form context
+    var formContext = executionContext.getFormContext();
+
+
+    // Get the lookup field control using the name or logical name of the field
+    var lookupField = formContext.getControl("ss_product");
+
+    if (lookupField) {
+        // Get the pricelistId value from your source (for example, a JavaScript variable)
+
+        var billinfInfoID = formContext.getAttribute("ss_billinginformation").getValue();
+        var ID = billinfInfoID[0].id.replace("{", "").replace("}", "");
+
+        var pricelevelid = undefined;
+
+        var req = new XMLHttpRequest();
+        req.open("GET", Xrm.Utility.getGlobalContext().getClientUrl() + `/api/data/v9.2/pricelevels(${ID})`, false);
+        req.setRequestHeader("OData-MaxVersion", "4.0");
+        req.setRequestHeader("OData-Version", "4.0");
+        req.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+        req.setRequestHeader("Accept", "application/json");
+        req.setRequestHeader("Prefer", "odata.include-annotations=*");
+        req.onreadystatechange = function () {
+            if (this.readyState === 4) {
+                req.onreadystatechange = null;
+                if (this.status === 200) {
+                    var result = JSON.parse(this.response);
+                    console.log(result);
+                    // Columns
+                    pricelevelid = result["pricelevelid"].replace("{", "").replace("}", ""); // Guid
+                    // Define the filter criteria
+                    var filter = "<filter type='and'>" +
+                        "<condition attribute='pricelevelid' operator='eq' value='" + pricelevelid + "' />" +
+                        "</filter>";
+
+                    // Apply the custom filter to the lookup field
+                    lookupField.addCustomFilter(filter);
+
+                } else {
+                    console.log(this.responseText);
+                }
+            }
+        };
+        req.send();
+
+
+
+
+    }
+}
+
+
+
